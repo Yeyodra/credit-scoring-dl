@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prediksi Risiko Kredit</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #f1f5f9; color: #0f172a; line-height: 1.55;
+    padding: 32px 16px 60px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  h1 { font-size: 22px; font-weight: 650; }
+  .sub { color: #64748b; font-size: 13.5px; margin-top: 5px; margin-bottom: 24px; }
+
+  .card {
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 22px; margin-bottom: 18px;
+  }
+  .card h2 {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: .7px;
+    color: #64748b; font-weight: 650; margin-bottom: 16px;
+  }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
+
+  label { display: block; font-size: 12px; color: #64748b; margin-bottom: 5px; }
+  input, select {
+    width: 100%; padding: 9px 11px; border: 1px solid #e2e8f0;
+    border-radius: 8px; font-size: 13.5px; font-family: inherit;
+    background: #fbfcfe; color: #0f172a;
+  }
+  input:focus, select:focus {
+    outline: none; border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+
+  button {
+    width: 100%; padding: 12px; margin-top: 18px;
+    background: #2563eb; color: #fff; border: 0; border-radius: 9px;
+    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  button:hover { background: #1d4ed8; }
+  button:disabled { background: #94a3b8; cursor: wait; }
+
+  #result { text-align: center; }
+  .pct { font-size: 60px; font-weight: 700; letter-spacing: -2.5px; line-height: 1; }
+  .pct-label { font-size: 13px; color: #64748b; margin-top: 6px; }
+
+  .verdict {
+    display: inline-block; margin-top: 18px; padding: 9px 20px;
+    border-radius: 99px; font-weight: 650; font-size: 14px;
+  }
+  .low  { background: #dcfce7; color: #14532d; }
+  .mid  { background: #fef3c7; color: #78350f; }
+  .high { background: #fee2e2; color: #7f1d1d; }
+
+  .bar { height: 10px; background: #e8edf5; border-radius: 99px; overflow: hidden; margin-top: 20px; }
+  .bar > div { height: 100%; border-radius: 99px; transition: width .45s ease; }
+
+  .note { font-size: 12.5px; color: #64748b; margin-top: 16px; line-height: 1.6; }
+  .stats { display: flex; gap: 22px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+  .stats div { text-align: center; }
+  .stats .k { font-size: 10.5px; color: #64748b; text-transform: uppercase; letter-spacing: .4px; }
+  .stats .v { font-size: 16px; font-weight: 650; margin-top: 2px; }
+
+  .err { background: #fee2e2; color: #7f1d1d; padding: 12px; border-radius: 8px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Prediksi Risiko Kredit</h1>
+  <p class="sub">
+    Masukkan data nasabah, sistem menghitung probabilitas gagal bayar
+    menggunakan neural network.
+  </p>
+
+  <div class="card">
+    <h2>Data Nasabah</h2>
+
+    <div class="grid">
+      <div>
+        <label>Limit Kredit (NT$)</label>
+        <input type="number" id="LIMIT_BAL" value="150000" step="10000" min="10000">
+      </div>
+      <div>
+        <label>Umur</label>
+        <input type="number" id="AGE" value="35" min="18" max="100">
+      </div>
+
+      <div>
+        <label>Jenis Kelamin</label>
+        <select id="SEX">
+          <option value="1">Laki-laki</option>
+          <option value="2">Perempuan</option>
+        </select>
+      </div>
+      <div>
+        <label>Pendidikan</label>
+        <select id="EDUCATION">
+          <option value="1">S1 ke atas</option>
+          <option value="2" selected>SMA / SMK</option>
+          <option value="3">SMP ke bawah</option>
+          <option value="4">Lainnya</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Status Pernikahan</label>
+        <select id="MARRIAGE">
+          <option value="1">Menikah</option>
+          <option value="2" selected>Belum menikah</option>
+          <option value="3">Lainnya</option>
+        </select>
+      </div>
+      <div>
+        <label>Status Pembayaran Terakhir</label>
+        <select id="PAY_0">
+          <option value="-1">Lunas tepat waktu</option>
+          <option value="0" selected>Bayar minimum</option>
+          <option value="1">Terlambat 1 bulan</option>
+          <option value="2">Terlambat 2 bulan</option>
+          <option value="3">Terlambat 3 bulan</option>
+          <option value="4">Terlambat 4 bulan</option>
+          <option value="5">Terlambat 5 bulan</option>
+          <option value="6">Terlambat 6 bulan</option>
+          <option value="7">Terlambat 7 bulan</option>
+          <option value="8">Terlambat 8 bulan+</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Tagihan Bulan Lalu (NT$)</label>
+        <input type="number" id="BILL_AMT1" value="50000" step="1000" min="0">
+      </div>
+      <div>
+        <label>Pembayaran Bulan Lalu (NT$)</label>
+        <input type="number" id="PAY_AMT1" value="8000" step="1000" min="0">
+      </div>
+    </div>
+
+    <button id="btn" onclick="predict()">Hitung Probabilitas Gagal Bayar</button>
+  </div>
+
+  <div class="card" id="result-card" style="display:none">
+    <h2>Hasil Prediksi</h2>
+    <div id="result"></div>
+  </div>
+
+</div>
+
+<script>
+const HIDDEN = {
+  PAY_2: 0, PAY_3: 0, PAY_4: 0, PAY_5: 0, PAY_6: 0,
+  BILL_AMT2: 48000, BILL_AMT3: 46000, BILL_AMT4: 44000, BILL_AMT5: 42000, BILL_AMT6: 40000,
+  PAY_AMT2: 7500, PAY_AMT3: 7000, PAY_AMT4: 6800, PAY_AMT5: 6500, PAY_AMT6: 6000
+};
+
+const NUMERIC_FIELDS = [
+  "LIMIT_BAL", "AGE", "PAY_0", "BILL_AMT1", "PAY_AMT1"
+];
+
+function collect() {
+  const payload = {};
+  NUMERIC_FIELDS.forEach(f => payload[f] = parseFloat(document.getElementById(f).value));
+  payload.SEX = parseInt(document.getElementById("SEX").value);
+  payload.EDUCATION = parseInt(document.getElementById("EDUCATION").value);
+  payload.MARRIAGE = parseInt(document.getElementById("MARRIAGE").value);
+  Object.assign(payload, HIDDEN);
+  return payload;
+}
+
+async function predict() {
+  const btn = document.getElementById("btn");
+  btn.disabled = true;
+  btn.textContent = "Menghitung...";
+
+  try {
+    const res = await fetch("/api/predict", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(collect())
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Gagal memproses");
+    render(data);
+  } catch (err) {
+    document.getElementById("result-card").style.display = "";
+    document.getElementById("result").innerHTML = `<div class="err">${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Hitung Probabilitas Gagal Bayar";
+  }
+}
+
+function render(d) {
+  const p = d.probability;
+  const pct = d.percent;
+
+  let cls, color, verdict;
+  if (p < 0.20) {
+    cls = "low"; color = "#16a34a"; verdict = "Risiko Rendah";
+  } else if (p < 0.45) {
+    cls = "mid"; color = "#d97706"; verdict = "Risiko Menengah";
+  } else {
+    cls = "high"; color = "#dc2626"; verdict = "Risiko Tinggi";
+  }
+
+  document.getElementById("result-card").style.display = "";
+  document.getElementById("result").innerHTML = `
+    <div class="pct" style="color:${color}">${pct}%</div>
+    <div class="pct-label">probabilitas gagal bayar</div>
+
+    <div class="bar"><div style="width:${Math.min(pct, 100)}%;background:${color}"></div></div>
+
+    <div class="verdict ${cls}">${verdict}</div>
+
+    <div class="stats">
+      <div>
+        <div class="k">Ambang Bawah</div>
+        <div class="v">20%</div>
+      </div>
+      <div>
+        <div class="k">Ambang Atas</div>
+        <div class="v">45%</div>
+      </div>
+      <div>
+        <div class="k">Rata-rata Dataset</div>
+        <div class="v">22,1%</div>
+      </div>
+    </div>
+
+    <p class="note">
+      Angka ini adalah estimasi probabilistik dari model, bukan keputusan final.
+      Model dilatih pada 24.000 data historis dan diuji pada 6.000 data yang
+      belum pernah dilihat, dengan AUC-ROC {{ "%.3f"|format(metrics.auc) }}.
+    </p>
+  `;
+}
+</script>
+</body>
+</html>
